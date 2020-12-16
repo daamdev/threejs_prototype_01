@@ -1,11 +1,13 @@
 import * as THREE from 'three'
 import {GUI} from 'dat.gui'
 import {PlayerControls} from './PlayerControls.js'
+import {VirtualJoystick} from './VirtualJoystick.js'
 
 const gui = new GUI();
 
 let player, camera;
 var controls; // Player Controller
+var joystick;
 
 function main() {
   const canvas = document.querySelector('#c');
@@ -80,11 +82,26 @@ function main() {
   player.position.x = 0;
   player.position.y += boxHeight / 2;
    
+ 
+  const pixelRatio = window.devicePixelRatio;
+  const width  = canvas.clientWidth  * pixelRatio | 0;
+  const height = canvas.clientHeight * pixelRatio | 0; 
   //CONTROL
-  controls = new PlayerControls( camera, player );
+
+  //CONTROL - JOYSTICK
+  joystick = new VirtualJoystick({
+    mouseSupport	: true,
+    stationaryBase	: true,
+    baseX		: width / 2,
+    baseY		: height - 200
+  });
+  
+  controls = new PlayerControls( camera, player, joystick );
   controls.init();
   //CONTROL - Events
   controls.addEventListener( 'change', render, false ); 
+
+
 
 
   function resizeRendererToDisplaySize(renderer) {
@@ -95,6 +112,10 @@ function main() {
     const needResize = canvas.width !== width || canvas.height !== height;
     if (needResize) {
       renderer.setSize(width, height, false);
+ 
+      if( controls != undefined){ 
+        joystick.resizeScreen(width/2,height - 200);
+      }
     }
     return needResize;
   }
@@ -115,7 +136,9 @@ function main() {
     //   cube.rotation.y = rot;
     // });
 
-		controls.update();
+     
+    controls.update(); 
+    
     
     renderer.render(scene, camera);
 

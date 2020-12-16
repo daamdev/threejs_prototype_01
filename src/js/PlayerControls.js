@@ -2,11 +2,12 @@
 
 import * as THREE from 'three'
 
-var PlayerControls = function ( camera, player, domElement ) {
+var PlayerControls = function ( camera, player, joystick, domElement) {
 
 	this.camera = camera;
 	this.player = player;
 	this.domElement = ( domElement !== undefined ) ? domElement : document;
+	this.joystick = joystick;
 
 	// API
 
@@ -17,10 +18,10 @@ var PlayerControls = function ( camera, player, domElement ) {
 	this.moveSpeed = 0.1;
 	this.turnSpeed = 0.05;
 
-	this.userZoom = true;
+	this.userZoom = false;
 	this.userZoomSpeed = 0.5;
 
-	this.userRotate = true;
+	this.userRotate = false;
 	this.userRotateSpeed = 0.75;
 
 	this.autoRotate = false;
@@ -145,6 +146,16 @@ var PlayerControls = function ( camera, player, domElement ) {
 		
 	};
 
+
+	
+	this.setJoystick = function(joystick) 
+	{
+		console.log("AAAAAAAAAAAAAAAAAAAAA");
+		this.joystick = joystick;        
+	};
+
+
+
 	this.update = function() { 
 
 		this.checkKeyStates();
@@ -223,8 +234,9 @@ var PlayerControls = function ( camera, player, domElement ) {
 
 	this.checkKeyStates = function () {
 
-	    if (keyState[38] || keyState[87]) {
 
+
+	    if (keyState[38] || keyState[87] || joystick.up()) { 
 	        // up arrow or 'w' - move forward
 
 	        this.player.position.x -= this.moveSpeed * Math.sin( this.player.rotation.y );
@@ -235,7 +247,7 @@ var PlayerControls = function ( camera, player, domElement ) {
 
 	    }
 
-	    if (keyState[40] || keyState[83]) {
+	    if (keyState[40] || keyState[83] || joystick.down() ) {
 
 	        // down arrow or 's' - move backward
 	        playerIsMoving = true;
@@ -248,7 +260,7 @@ var PlayerControls = function ( camera, player, domElement ) {
 
 	    }
 
-	    if (keyState[37] || keyState[65]) {
+	    if (keyState[37] || keyState[65] || joystick.left()) {
 
 	        // left arrow or 'a' - rotate left
 	        playerIsMoving = true;
@@ -257,7 +269,7 @@ var PlayerControls = function ( camera, player, domElement ) {
 
 	    }
 
-	    if (keyState[39] || keyState[68]) {
+	    if (keyState[39] || keyState[68] || joystick.right()) {
 
 	        // right arrow or 'd' - rotate right
 	        playerIsMoving = true;
@@ -422,16 +434,20 @@ var PlayerControls = function ( camera, player, domElement ) {
 
         keyState[event.keyCode || event.which] = false;
 
-    }
+	}
+		
+		
 
 	this.domElement.addEventListener('contextmenu', function( event ) { event.preventDefault(); }, false );
-	this.domElement.addEventListener('mousedown', onMouseDown, false );
+	//this.domElement.addEventListener('mousedown', onMouseDown, false );
 	this.domElement.addEventListener('mousewheel', onMouseWheel, false );
 	this.domElement.addEventListener('DOMMouseScroll', onMouseWheel, false ); // firefox
 	this.domElement.addEventListener('keydown', onKeyDown, false );
 	this.domElement.addEventListener('keyup', onKeyUp, false );
 
 };
+
+
 
 
 
