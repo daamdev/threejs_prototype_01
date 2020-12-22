@@ -35,14 +35,10 @@ function main() {
   }
 
 
-  const boxWidth = 1;
-  const boxHeight = 1;
-  const boxDepth = 1;
-  const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
   const material = new THREE.MeshPhongMaterial({color:0xFFC0CB});
     
-  const aaaa = new THREE.Mesh(new THREE.PlaneBufferGeometry(30,30), material);
-  aaaa.rotation.x = -Math.PI / 2;
+  const plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(30,30), material);
+  plane.rotation.x = -Math.PI / 2;
 
   // const cameraFolder = gui.addFolder("camera")  
   // cameraFolder.add(camera.rotation, "x", -Math.PI * 1, Math.PI * 2, 0.01)
@@ -51,36 +47,50 @@ function main() {
   
   // cameraFolder.open();
   // const cubeFolder = gui.addFolder("plane")
-  // cubeFolder.add(aaaa.rotation, "x", -Math.PI * 2, Math.PI * 2, 0.01)
-  // cubeFolder.add(aaaa.rotation, "y", -Math.PI * 2, Math.PI * 2, 0.01)
-  // cubeFolder.add(aaaa.rotation, "z", -Math.PI * 2, Math.PI * 2, 0.01)
+  // cubeFolder.add(Plane.rotation, "x", -Math.PI * 2, Math.PI * 2, 0.01)
+  // cubeFolder.add(plane.rotation, "y", -Math.PI * 2, Math.PI * 2, 0.01)
+  // cubeFolder.add(plane.rotation, "z", -Math.PI * 2, Math.PI * 2, 0.01)
   // cubeFolder.open()
   
-  scene.add(aaaa);
+  scene.add(plane);
 
-  function makeInstance(geometry, color, x) {
-    const material = new THREE.MeshPhongMaterial({color});
 
-    const cube = new THREE.Mesh(geometry, material);
+  
+  const boxWidth = 3;
+  const boxHeight = 1;
+  const boxDepth = 3;
+  const boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+
+  const boxArea = [
+    makeInstance(boxGeometry, "box1",0x44ff88, -7, 0),
+    makeInstance(boxGeometry, "box2",0xff8844,  0, -7),
+    makeInstance(boxGeometry, "box3",0x4488ff,  7, 0),
+    makeInstance(boxGeometry, "box4",0xff88ff,  0, 7),
+  ];
+
+  function makeInstance(geometry, objName, color, x, z) {
+
+    //const colorMaterial = new THREE.MeshPhongMaterial({color});
+    const wireMaterial = new THREE.MeshBasicMaterial( { color, wireframe:true, wireframeLinewidth:10 } );
+
+    const cube = new THREE.Mesh(geometry, wireMaterial);
     scene.add(cube);
 
+    cube.name = objName;
     cube.position.x = x;
     cube.position.y += boxHeight / 2;
+    cube.position.z = z;
 
     return cube;
   }
 
-  const cubes = [
-    makeInstance(geometry, 0x44aa88,  -2),
-    makeInstance(geometry, 0xaa8844,  2),
-  ];
-
-
+  const playerGeometry = new THREE.BoxGeometry(1, 1, 1);
   const playerMaterial = new THREE.MeshPhongMaterial({color:0x8844aa});
-  player = new THREE.Mesh(geometry, playerMaterial);
+  player = new THREE.Mesh(playerGeometry, playerMaterial);
   scene.add(player);
   player.position.x = 0;
   player.position.y += boxHeight / 2;
+  player.position.z = 0;
    
  
   const pixelRatio = window.devicePixelRatio;
@@ -120,6 +130,39 @@ function main() {
     return needResize;
   }
 
+  let collisionObj = "";
+  function collisionCheck(){ 
+		 if (boxArea !== undefined){
+        boxArea.forEach(function(object){
+          if (collisionObj != object.name && player != undefined && object.visible && player.position.distanceTo(object.position)<2){                               
+            //TODO COLLISION!          
+            if( object.name == "box1" ){      
+              collisionObj = object.name;
+              console.log("COLLISION : BOX1");              
+              changePlaneColor(0x44ff88);
+            }else if( object.name == "box2"){
+              collisionObj = object.name;
+              console.log("COLLISION : BOX2");
+              changePlaneColor(0xff8844);
+            }else if( object.name == "box3"){
+              collisionObj = object.name;
+              console.log("COLLISION : BOX3");
+              changePlaneColor(0x4488ff);
+            }else if( object.name == "box4"){ 
+              collisionObj = object.name;
+              console.log("COLLISION : BOX4");
+              changePlaneColor(0xff88ff);
+            }
+        } 
+      });      
+    }
+  }
+
+  function changePlaneColor(color){     
+    plane.material =  new THREE.MeshPhongMaterial({color});
+
+  }
+
   function render(time) {
     time *= 0.001;
 
@@ -138,6 +181,7 @@ function main() {
 
      
     controls.update(); 
+    collisionCheck();
     
     
     renderer.render(scene, camera);

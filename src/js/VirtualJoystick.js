@@ -138,7 +138,7 @@ VirtualJoystick.prototype.right	= function(){
 	return true;	
 }
 VirtualJoystick.prototype.left	= function(){
-	if( this._pressed === false )	return false;
+	if( this._pressed === false )	return false; 
 	var deltaX	= this.deltaX();
 	var deltaY	= this.deltaY();
 	if( deltaX >= 0 )				return false;

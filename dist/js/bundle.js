@@ -813,46 +813,53 @@ function main() {
     var ambLight = new three__WEBPACK_IMPORTED_MODULE_0__.AmbientLight(color, 0.35);
     scene.add(ambLight);
   }
-  var boxWidth = 1;
-  var boxHeight = 1;
-  var boxDepth = 1;
-  var geometry = new three__WEBPACK_IMPORTED_MODULE_0__.BoxGeometry(boxWidth, boxHeight, boxDepth);
   var material = new three__WEBPACK_IMPORTED_MODULE_0__.MeshPhongMaterial({
     color: 0xFFC0CB
   });
-  var aaaa = new three__WEBPACK_IMPORTED_MODULE_0__.Mesh(new three__WEBPACK_IMPORTED_MODULE_0__.PlaneBufferGeometry(30, 30), material);
-  aaaa.rotation.x = -Math.PI / 2; // const cameraFolder = gui.addFolder("camera")  
+  var plane = new three__WEBPACK_IMPORTED_MODULE_0__.Mesh(new three__WEBPACK_IMPORTED_MODULE_0__.PlaneBufferGeometry(30, 30), material);
+  plane.rotation.x = -Math.PI / 2; // const cameraFolder = gui.addFolder("camera")  
   // cameraFolder.add(camera.rotation, "x", -Math.PI * 1, Math.PI * 2, 0.01)
   // cameraFolder.add(camera.position, "y", -Math.PI * 2, Math.PI * 1, 0.01)
   // cameraFolder.add(camera.position, "z", -Math.PI * 1, Math.PI * 2, 0.01)
   // cameraFolder.open();
   // const cubeFolder = gui.addFolder("plane")
-  // cubeFolder.add(aaaa.rotation, "x", -Math.PI * 2, Math.PI * 2, 0.01)
-  // cubeFolder.add(aaaa.rotation, "y", -Math.PI * 2, Math.PI * 2, 0.01)
-  // cubeFolder.add(aaaa.rotation, "z", -Math.PI * 2, Math.PI * 2, 0.01)
+  // cubeFolder.add(Plane.rotation, "x", -Math.PI * 2, Math.PI * 2, 0.01)
+  // cubeFolder.add(plane.rotation, "y", -Math.PI * 2, Math.PI * 2, 0.01)
+  // cubeFolder.add(plane.rotation, "z", -Math.PI * 2, Math.PI * 2, 0.01)
   // cubeFolder.open()
 
-  scene.add(aaaa);
+  scene.add(plane);
+  var boxWidth = 3;
+  var boxHeight = 1;
+  var boxDepth = 3;
+  var boxGeometry = new three__WEBPACK_IMPORTED_MODULE_0__.BoxGeometry(boxWidth, boxHeight, boxDepth);
+  var boxArea = [makeInstance(boxGeometry, "box1", 0x44ff88, -7, 0), makeInstance(boxGeometry, "box2", 0xff8844, 0, -7), makeInstance(boxGeometry, "box3", 0x4488ff, 7, 0), makeInstance(boxGeometry, "box4", 0xff88ff, 0, 7)];
 
-  function makeInstance(geometry, color, x) {
-    var material = new three__WEBPACK_IMPORTED_MODULE_0__.MeshPhongMaterial({
-      color: color
+  function makeInstance(geometry, objName, color, x, z) {
+    //const colorMaterial = new THREE.MeshPhongMaterial({color});
+    var wireMaterial = new three__WEBPACK_IMPORTED_MODULE_0__.MeshBasicMaterial({
+      color: color,
+      wireframe: true,
+      wireframeLinewidth: 10
     });
-    var cube = new three__WEBPACK_IMPORTED_MODULE_0__.Mesh(geometry, material);
+    var cube = new three__WEBPACK_IMPORTED_MODULE_0__.Mesh(geometry, wireMaterial);
     scene.add(cube);
+    cube.name = objName;
     cube.position.x = x;
     cube.position.y += boxHeight / 2;
+    cube.position.z = z;
     return cube;
   }
 
-  var cubes = [makeInstance(geometry, 0x44aa88, -2), makeInstance(geometry, 0xaa8844, 2)];
+  var playerGeometry = new three__WEBPACK_IMPORTED_MODULE_0__.BoxGeometry(1, 1, 1);
   var playerMaterial = new three__WEBPACK_IMPORTED_MODULE_0__.MeshPhongMaterial({
     color: 0x8844aa
   });
-  player = new three__WEBPACK_IMPORTED_MODULE_0__.Mesh(geometry, playerMaterial);
+  player = new three__WEBPACK_IMPORTED_MODULE_0__.Mesh(playerGeometry, playerMaterial);
   scene.add(player);
   player.position.x = 0;
   player.position.y += boxHeight / 2;
+  player.position.z = 0;
   var pixelRatio = window.devicePixelRatio;
   var width = canvas.clientWidth * pixelRatio | 0;
   var height = canvas.clientHeight * pixelRatio | 0; //CONTROL
@@ -887,6 +894,41 @@ function main() {
     return needResize;
   }
 
+  var collisionObj = "";
+
+  function collisionCheck() {
+    if (boxArea !== undefined) {
+      boxArea.forEach(function (object) {
+        if (collisionObj != object.name && player != undefined && object.visible && player.position.distanceTo(object.position) < 2) {
+          //TODO COLLISION!          
+          if (object.name == "box1") {
+            collisionObj = object.name;
+            console.log("COLLISION : BOX1");
+            changePlaneColor(0x44ff88);
+          } else if (object.name == "box2") {
+            collisionObj = object.name;
+            console.log("COLLISION : BOX2");
+            changePlaneColor(0xff8844);
+          } else if (object.name == "box3") {
+            collisionObj = object.name;
+            console.log("COLLISION : BOX3");
+            changePlaneColor(0x4488ff);
+          } else if (object.name == "box4") {
+            collisionObj = object.name;
+            console.log("COLLISION : BOX4");
+            changePlaneColor(0xff88ff);
+          }
+        }
+      });
+    }
+  }
+
+  function changePlaneColor(color) {
+    plane.material = new three__WEBPACK_IMPORTED_MODULE_0__.MeshPhongMaterial({
+      color: color
+    });
+  }
+
   function render(time) {
     time *= 0.001;
 
@@ -903,6 +945,7 @@ function main() {
 
 
     controls.update();
+    collisionCheck();
     renderer.render(scene, camera);
     requestAnimationFrame(render);
   }
