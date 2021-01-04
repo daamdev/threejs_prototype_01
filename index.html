@@ -1,10 +1,31 @@
 <!DOCTYPE html>
-<html>    
-    <head>
-<link rel="stylesheet" href="styles/style.css">
-    </head>
-    <body>
-        <canvas id="c" ></canvas>
-        <script src="dist/js/bundle.js"></script> 
-    </body>
+<html>
+  <head>
+    <link rel="stylesheet" href="styles/style.css" />
+  </head>
+  <body>
+    
+    <canvas id="c"></canvas>
+    <div id="text-div" >
+      <h1 id="text-h1"W>Helloworld</h1>
+      <button id="btn_runshow" style="width:100px;height:30px;">run-show</button>
+      <button id="btn_runhide" style="width:100px;height:30px;">run-hide</button>
+    </div>
+    <script src="dist/js/bundle.js"></script>
+    <script>
+      window.onload = ()=>{
+        document.querySelector('#btn_runshow').addEventListener('click',()=>{
+          // alert(document.getElementById('text-h1'));
+          document.getElementById('text-h1').classList.remove('run-hide');
+          document.getElementById('text-h1').classList.add('run-show');
+          
+        });
+        document.querySelector('#btn_runhide').addEventListener('click',()=>{
+          document.getElementById('text-h1').classList.remove('run-show');
+          document.getElementById('text-h1').classList.add('run-hide');
+          
+        });
+      }
+    </script>
+  </body>
 </html>
