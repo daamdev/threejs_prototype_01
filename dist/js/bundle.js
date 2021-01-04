@@ -800,7 +800,7 @@ function main() {
     canvas: canvas
   });
   var fov = 35;
-  var aspect = 2; // the canvas default
+  var aspect = window.innerWidth / window.innerHeight; // the canvas default
 
   var near = 0.1;
   var far = 1000;
@@ -836,9 +836,10 @@ function main() {
   // cubeFolder.open()
 
   scene.add(plane);
-  var boxWidth = 5;
+  var boxSize = 6;
+  var boxWidth = boxSize;
   var boxHeight = 1;
-  var boxDepth = 5;
+  var boxDepth = boxSize;
   var boxGeometry = new three__WEBPACK_IMPORTED_MODULE_0__.BoxGeometry(boxWidth, boxHeight, boxDepth);
   var boxArea = [makeInstance(boxGeometry, "box1", 0x44ff88, -15, 0), makeInstance(boxGeometry, "box2", 0xff8844, 0, -15), makeInstance(boxGeometry, "box3", 0x4488ff, 15, 0), makeInstance(boxGeometry, "box4", 0xff88ff, 0, 15)];
 
@@ -858,7 +859,8 @@ function main() {
     return cube;
   }
 
-  var playerGeometry = new three__WEBPACK_IMPORTED_MODULE_0__.BoxGeometry(1, 1, 1);
+  var playerSize = 1;
+  var playerGeometry = new three__WEBPACK_IMPORTED_MODULE_0__.BoxGeometry(playerSize, playerSize, playerSize);
   var playerMaterial = new three__WEBPACK_IMPORTED_MODULE_0__.MeshPhongMaterial({
     color: 0x8844aa
   });
@@ -887,9 +889,11 @@ function main() {
   function resizeRendererToDisplaySize(renderer) {
     var canvas = renderer.domElement;
     var pixelRatio = window.devicePixelRatio;
-    var width = canvas.clientWidth * pixelRatio | 0;
-    var height = canvas.clientHeight * pixelRatio | 0;
-    var needResize = canvas.width !== width || canvas.height !== height;
+    var width = window.innerWidth; // canvas.clientWidth  * pixelRatio | 0;
+
+    var height = window.innerHeight; //canvas.clientHeight * pixelRatio | 0;
+
+    var needResize = canvas.width !== width || canvas.height !== height; //console.log(" TEST     " +canvas.clientWidth  + "  " + canvas.clientHeight + "     " +pixelRatio );
 
     if (needResize) {
       renderer.setSize(width, height, false);
@@ -903,11 +907,12 @@ function main() {
   }
 
   var collisionObj = "";
+  var distancePlayerToBox = playerSize / 2 + boxSize / 2 + 0.9; // 0.9 : offset
 
   function collisionCheck() {
     if (boxArea !== undefined) {
       boxArea.forEach(function (object) {
-        if (collisionObj != object.name && player != undefined && object.visible && player.position.distanceTo(object.position) < 2) {
+        if (collisionObj != object.name && player != undefined && object.visible && player.position.distanceTo(object.position) < distancePlayerToBox) {
           //TODO COLLISION!          
           if (object.name == "box1") {
             collisionObj = object.name;
