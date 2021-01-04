@@ -2,12 +2,13 @@ import * as THREE from 'three'
 import {GUI} from 'dat.gui'
 import {PlayerControls} from './PlayerControls.js'
 import {VirtualJoystick} from './VirtualJoystick.js'
+import { Easing, Tween, autoPlay } from 'es6-tween';
 
 const gui = new GUI();
 
 let player, camera;
 var controls; // Player Controller
-var joystick;
+var joystick; 
 
 function main() {
   const canvas = document.querySelector('#c');
@@ -17,6 +18,9 @@ function main() {
   const aspect = 2;  // the canvas default
   const near = 0.1;
   const far = 1000;
+  
+  const colorBase = 0x333333;
+
   camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   // camera.position.z = 6.28;
   // camera.rotation.x =0.64;
@@ -24,6 +28,9 @@ function main() {
   
   const scene = new THREE.Scene();
   {
+    
+    scene.background = new THREE.Color( colorBase );
+
     const color = 0xFFFFFF;
     const intensity = 1;
     const dirLight = new THREE.DirectionalLight(color, intensity);
@@ -35,9 +42,9 @@ function main() {
   }
 
 
-  const material = new THREE.MeshPhongMaterial({color:0xFFC0CB});
+  const planeMaterial = new THREE.MeshPhongMaterial({color:colorBase});
     
-  const plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(30,30), material);
+  const plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(100,100), planeMaterial);
   plane.rotation.x = -Math.PI / 2;
 
   // const cameraFolder = gui.addFolder("camera")  
@@ -56,16 +63,16 @@ function main() {
 
 
   
-  const boxWidth = 3;
+  const boxWidth = 5;
   const boxHeight = 1;
-  const boxDepth = 3;
+  const boxDepth = 5;
   const boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
 
   const boxArea = [
-    makeInstance(boxGeometry, "box1",0x44ff88, -7, 0),
-    makeInstance(boxGeometry, "box2",0xff8844,  0, -7),
-    makeInstance(boxGeometry, "box3",0x4488ff,  7, 0),
-    makeInstance(boxGeometry, "box4",0xff88ff,  0, 7),
+    makeInstance(boxGeometry, "box1",0x44ff88, -15, 0),
+    makeInstance(boxGeometry, "box2",0xff8844,  0, -15),
+    makeInstance(boxGeometry, "box3",0x4488ff,  15, 0),
+    makeInstance(boxGeometry, "box4",0xff88ff,  0, 15),
   ];
 
   function makeInstance(geometry, objName, color, x, z) {
@@ -111,8 +118,7 @@ function main() {
   //CONTROL - Events
   controls.addEventListener( 'change', render, false ); 
 
-
-
+  autoPlay(true);
 
   function resizeRendererToDisplaySize(renderer) {
     const canvas = renderer.domElement;
@@ -159,7 +165,57 @@ function main() {
   }
 
   function changePlaneColor(color){     
-    plane.material =  new THREE.MeshPhongMaterial({color});
+    //plane.material =  new THREE.MeshPhongMaterial({color});
+    //plane.material.color.setHex(color);
+
+    //clipAction.play();
+     
+    /*
+    TweenMax.to(plane.material.color, 5, {
+      r: col.r,
+      g: col.g,
+      b: col.b,
+    });
+    */
+
+   //Tween.autoPlay(true); // simplify the your code
+  
+   var value = new THREE.Color(color);
+   console.log("changePlaneColor : "+value.r + "   " + value.g + "   " + value.b);
+
+
+
+   new Tween(plane.material.color)
+    .to({       
+      'r': value.r,
+      'g': value.g,
+      'b': value.b,}, 1000)    
+    .on('update', ({ r,g,b }) => {  
+      //console.log("update : "+ r + "   " +  g + "   " + b);
+      //plane.material.color = value; 
+    })
+    .on('complete', ({  r,g,b }) => {
+      console.log("complete : "+value.r + "   " + value.g + "   " + value.b);
+      plane.material.color = value;
+    })
+    .start();  
+
+    
+   new Tween(scene.background)
+   .to({       
+     'r': value.r,
+     'g': value.g,
+     'b': value.b,}, 1000)    
+   .on('update', ({ r,g,b }) => {  
+     //console.log("update : "+ r + "   " +  g + "   " + b);
+     //plane.material.color = value; 
+   })
+   .on('complete', ({  r,g,b }) => {
+     console.log("complete : "+value.r + "   " + value.g + "   " + value.b);
+     scene.background = value;
+   })
+   .start();
+
 
   }
 
@@ -179,13 +235,13 @@ function main() {
     //   cube.rotation.y = rot;
     // });
 
-     
+    
+
     controls.update(); 
     collisionCheck();
-    
-    
-    renderer.render(scene, camera);
+     
 
+    renderer.render(scene, camera);
     requestAnimationFrame(render);
   }
 
