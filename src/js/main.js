@@ -13,7 +13,9 @@ var joystick;
 function main() {
   const canvas = document.querySelector('#c');
   const renderer = new THREE.WebGLRenderer({canvas});
-  
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
   const fov = 35;
   const aspect = window.innerWidth / window.innerHeight;  // the canvas default
   const near = 0.1;
@@ -21,10 +23,9 @@ function main() {
   
   const colorBase = 0x333333;
 
-  camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-  // camera.position.z = 6.28;
-  // camera.rotation.x =0.64;
-  // camera.position.y = -4.89;
+  const movalbeAreaSize = 31;
+
+  camera = new THREE.PerspectiveCamera(fov, aspect, near, far);  
   
   const scene = new THREE.Scene();
   {
@@ -32,10 +33,25 @@ function main() {
     scene.background = new THREE.Color( colorBase );
 
     const color = 0xFFFFFF;
-    const intensity = 1;
+    const intensity = 0.9;
     const dirLight = new THREE.DirectionalLight(color, intensity);
-    dirLight.position.set(-1, 2, 4);
+    dirLight.position.set(100, 120, 100);
+    dirLight.castShadow = true;
     scene.add(dirLight);
+        
+    var side = 17.0;
+    dirLight.shadow.camera.top = side;
+    dirLight.shadow.camera.bottom = -side;
+    dirLight.shadow.camera.left = side;
+    dirLight.shadow.camera.right = -side;
+
+    dirLight.shadow.mapSize.set(2048,2048);
+
+    dirLight.shadow.camera.near = 0.1; // default
+    dirLight.shadow.camera.far = 1000; // default
+
+    //var shadowHelper = new THREE.CameraHelper( dirLight.shadow.camera );
+    //scene.add( shadowHelper );
 
     const ambLight = new THREE.AmbientLight(color, 0.35);
     scene.add(ambLight);
@@ -46,6 +62,8 @@ function main() {
     
   const plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(100,100), planeMaterial);
   plane.rotation.x = -Math.PI / 2;
+  plane.castShadow = false; //default is false
+  plane.receiveShadow = true; //default is false
 
   // const cameraFolder = gui.addFolder("camera")  
   // cameraFolder.add(camera.rotation, "x", -Math.PI * 1, Math.PI * 2, 0.01)
@@ -77,7 +95,7 @@ function main() {
   function makeInstance(geometry, objName, color, x, z) {
 
     //const colorMaterial = new THREE.MeshPhongMaterial({color});
-    const wireMaterial = new THREE.MeshBasicMaterial( { color, wireframe:true, wireframeLinewidth:10 } );
+    const wireMaterial = new THREE.MeshBasicMaterial( { color, wireframe:true, wireframeLinewidth:15 } );
 
     const cube = new THREE.Mesh(geometry, wireMaterial);
     scene.add(cube);
@@ -92,12 +110,16 @@ function main() {
 
   const playerSize  = 1;
   const playerGeometry = new THREE.BoxGeometry(playerSize,playerSize,playerSize);
-  const playerMaterial = new THREE.MeshPhongMaterial({color:0x8844aa});
+  const playerMaterial = new THREE.MeshPhongMaterial({color:0xffaaaa});
   player = new THREE.Mesh(playerGeometry, playerMaterial);
   scene.add(player);
   player.position.x = 0;
   player.position.y += boxHeight / 2;
   player.position.z = 0;
+  
+  player.castShadow = true; //default is false
+  player.receiveShadow = false; //default is false
+
    
  
   const pixelRatio = window.devicePixelRatio;
@@ -115,6 +137,8 @@ function main() {
   
   controls = new PlayerControls( camera, player, joystick );
   controls.init();
+  controls.setMovableArea(movalbeAreaSize,movalbeAreaSize);
+
   //CONTROL - Events
   controls.addEventListener( 'change', render, false ); 
 
@@ -147,19 +171,19 @@ function main() {
             if( object.name == "box1" ){      
               collisionObj = object.name;
               console.log("COLLISION : BOX1");              
-              changePlaneColor(0x44ff88);
+              changePlaneColor(0x22dd66);
             }else if( object.name == "box2"){
               collisionObj = object.name;
               console.log("COLLISION : BOX2");
-              changePlaneColor(0xff8844);
+              changePlaneColor(0xdd6622);
             }else if( object.name == "box3"){
               collisionObj = object.name;
               console.log("COLLISION : BOX3");
-              changePlaneColor(0x4488ff);
+              changePlaneColor(0x2266dd);
             }else if( object.name == "box4"){ 
               collisionObj = object.name;
               console.log("COLLISION : BOX4");
-              changePlaneColor(0xff88ff);
+              changePlaneColor(0xdd66dd);
             }
         } 
       });      

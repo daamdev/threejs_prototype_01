@@ -28,11 +28,12 @@ var PlayerControls = function ( camera, player, joystick, domElement) {
 	this.autoRotateSpeed = 0.05;
 	this.YAutoRotation = false;
 
-	this.minPolarAngle = 0;
+	this.minPolarAngle = -Math.PI;
 	this.maxPolarAngle = Math.PI;
 
 	this.minDistance = 0;
 	this.maxDistance = Infinity;
+
 
 	// internals
 
@@ -59,6 +60,9 @@ var PlayerControls = function ( camera, player, joystick, domElement) {
 	var keyState = {};
 	var STATE = { NONE: -1, ROTATE: 0, ZOOM: 1, PAN: 2 };
 	var state = STATE.NONE;
+
+	var movableAreaWidth = -1;
+	var movalbeAreaHeight = -1;
 
 	// events
 
@@ -143,14 +147,21 @@ var PlayerControls = function ( camera, player, joystick, domElement) {
 		this.camera.position.z = this.player.position.x + 2;
 
 		this.camera.lookAt( this.player.position );
+
+		movableAreaWidth = -1;
+		movalbeAreaHeight = -1;
 		
 	};
 
+	this.setMovableArea = function(widht, height){
+
+		movableAreaWidth = widht;
+		movalbeAreaHeight = height;
+	};
 
 	
 	this.setJoystick = function(joystick) 
-	{
-		console.log("AAAAAAAAAAAAAAAAAAAAA");
+	{ 
 		this.joystick = joystick;        
 	};
 
@@ -239,8 +250,10 @@ var PlayerControls = function ( camera, player, joystick, domElement) {
 	    if (keyState[38] || keyState[87] || joystick.up()) { 
 	        // up arrow or 'w' - move forward
 
-	        this.player.position.x -= this.moveSpeed * Math.sin( this.player.rotation.y );
-	        this.player.position.z -= this.moveSpeed * Math.cos( this.player.rotation.y );
+	        //this.player.position.x -= this.moveSpeed * Math.sin( this.player.rotation.y );
+			//this.player.position.z -= this.moveSpeed * Math.cos( this.player.rotation.y );			
+			this.player.position.x = checkMovableAreaX(this.player.position.x, -(this.moveSpeed * Math.sin( this.player.rotation.y )) );
+			this.player.position.z = checkMovableAreaZ(this.player.position.z, -(this.moveSpeed * Math.cos( this.player.rotation.y )) );
 
 	        this.camera.position.x -= this.moveSpeed * Math.sin( this.player.rotation.y );
 	        this.camera.position.z -= this.moveSpeed * Math.cos( this.player.rotation.y );
@@ -252,8 +265,12 @@ var PlayerControls = function ( camera, player, joystick, domElement) {
 	        // down arrow or 's' - move backward
 	        playerIsMoving = true;
 
-	        this.player.position.x += this.moveSpeed * Math.sin( this.player.rotation.y );
-	        this.player.position.z += this.moveSpeed * Math.cos( this.player.rotation.y );
+	        //this.player.position.x += this.moveSpeed * Math.sin( this.player.rotation.y );
+	        //this.player.position.z += this.moveSpeed * Math.cos( this.player.rotation.y );
+			this.player.position.x = checkMovableAreaX(this.player.position.x, (this.moveSpeed * Math.sin( this.player.rotation.y )) );
+			this.player.position.z = checkMovableAreaZ(this.player.position.z, (this.moveSpeed * Math.cos( this.player.rotation.y )) );
+
+
 
 	        this.camera.position.x += this.moveSpeed * Math.sin( this.player.rotation.y );
 	        this.camera.position.z += this.moveSpeed * Math.cos( this.player.rotation.y );
@@ -282,8 +299,12 @@ var PlayerControls = function ( camera, player, joystick, domElement) {
 	        // 'q' - strafe left
 	        playerIsMoving = true;
 
-	        this.player.position.x -= this.moveSpeed * Math.cos( this.player.rotation.y );
-	        this.player.position.z += this.moveSpeed * Math.sin( this.player.rotation.y );
+			
+	        //this.player.position.x -= this.moveSpeed * Math.cos( this.player.rotation.y );
+			this.player.position.x = checkMovableAreaX(this.player.position.x, -(this.moveSpeed * Math.cos( this.player.rotation.y )) );
+
+			//this.player.position.z += this.moveSpeed * Math.sin( this.player.rotation.y );
+			this.player.position.z = checkMovableAreaZ(this.player.position.z, (this.moveSpeed * Math.sin( this.player.rotation.y)) );
 
 	        this.camera.position.x -= this.moveSpeed * Math.cos( this.player.rotation.y );
 	        this.camera.position.z += this.moveSpeed * Math.sin( this.player.rotation.y );
@@ -295,8 +316,10 @@ var PlayerControls = function ( camera, player, joystick, domElement) {
 	        // 'e' - strage right
 	        playerIsMoving = true;
 
-	        this.player.position.x += this.moveSpeed * Math.cos( this.player.rotation.y );
-	        this.player.position.z -= this.moveSpeed * Math.sin( this.player.rotation.y );
+	        //this.player.position.x += this.moveSpeed * Math.cos( this.player.rotation.y );
+			this.player.position.x = checkMovableAreaX(this.player.position.x, (this.moveSpeed * Math.cos( this.player.rotation.y )) );
+	        //this.player.position.z -= this.moveSpeed * Math.sin( this.player.rotation.y );
+			this.player.position.z = checkMovableAreaZ(this.player.position.z, -(this.moveSpeed * Math.sin( this.player.rotation.y )) );
 
 	        this.camera.position.x += this.moveSpeed * Math.cos( this.player.rotation.y );
 	        this.camera.position.z -= this.moveSpeed * Math.sin( this.player.rotation.y );
@@ -304,6 +327,33 @@ var PlayerControls = function ( camera, player, joystick, domElement) {
 	    }
 
 	};
+
+
+	function checkMovableAreaX( x, moveX){
+		
+		if( movableAreaWidth == -1 )
+			return (x + moveX);
+			
+		
+		if( (x + moveX) > ( movableAreaWidth / 2 ) || (x + moveX) < -( movableAreaWidth / 2 ))
+			return x;
+
+		return x + moveX; 
+
+	}
+
+	function checkMovableAreaZ( z, moveZ){
+		
+		if( movalbeAreaHeight  == -1 )
+			return (z + moveZ);
+		
+		if( (z + moveZ) > ( movalbeAreaHeight / 2 ) || (z + moveZ) < -( movalbeAreaHeight / 2 ))
+			return z;
+
+		return z + moveZ; 
+	}
+
+
 
 	function getAutoRotationAngle() { 
 

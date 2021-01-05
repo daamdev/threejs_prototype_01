@@ -32,7 +32,7 @@ var PlayerControls = function PlayerControls(camera, player, joystick, domElemen
   this.autoRotate = false;
   this.autoRotateSpeed = 0.05;
   this.YAutoRotation = false;
-  this.minPolarAngle = 0;
+  this.minPolarAngle = -Math.PI;
   this.maxPolarAngle = Math.PI;
   this.minDistance = 0;
   this.maxDistance = Infinity; // internals
@@ -58,7 +58,9 @@ var PlayerControls = function PlayerControls(camera, player, joystick, domElemen
     ZOOM: 1,
     PAN: 2
   };
-  var state = STATE.NONE; // events
+  var state = STATE.NONE;
+  var movableAreaWidth = -1;
+  var movalbeAreaHeight = -1; // events
 
   var changeEvent = {
     type: 'change'
@@ -117,10 +119,16 @@ var PlayerControls = function PlayerControls(camera, player, joystick, domElemen
     this.camera.position.y = this.player.position.y + 2;
     this.camera.position.z = this.player.position.x + 2;
     this.camera.lookAt(this.player.position);
+    movableAreaWidth = -1;
+    movalbeAreaHeight = -1;
+  };
+
+  this.setMovableArea = function (widht, height) {
+    movableAreaWidth = widht;
+    movalbeAreaHeight = height;
   };
 
   this.setJoystick = function (joystick) {
-    console.log("AAAAAAAAAAAAAAAAAAAAA");
     this.joystick = joystick;
   };
 
@@ -173,17 +181,21 @@ var PlayerControls = function PlayerControls(camera, player, joystick, domElemen
   this.checkKeyStates = function () {
     if (keyState[38] || keyState[87] || joystick.up()) {
       // up arrow or 'w' - move forward
-      this.player.position.x -= this.moveSpeed * Math.sin(this.player.rotation.y);
-      this.player.position.z -= this.moveSpeed * Math.cos(this.player.rotation.y);
+      //this.player.position.x -= this.moveSpeed * Math.sin( this.player.rotation.y );
+      //this.player.position.z -= this.moveSpeed * Math.cos( this.player.rotation.y );			
+      this.player.position.x = checkMovableAreaX(this.player.position.x, -(this.moveSpeed * Math.sin(this.player.rotation.y)));
+      this.player.position.z = checkMovableAreaZ(this.player.position.z, -(this.moveSpeed * Math.cos(this.player.rotation.y)));
       this.camera.position.x -= this.moveSpeed * Math.sin(this.player.rotation.y);
       this.camera.position.z -= this.moveSpeed * Math.cos(this.player.rotation.y);
     }
 
     if (keyState[40] || keyState[83] || joystick.down()) {
       // down arrow or 's' - move backward
-      playerIsMoving = true;
-      this.player.position.x += this.moveSpeed * Math.sin(this.player.rotation.y);
-      this.player.position.z += this.moveSpeed * Math.cos(this.player.rotation.y);
+      playerIsMoving = true; //this.player.position.x += this.moveSpeed * Math.sin( this.player.rotation.y );
+      //this.player.position.z += this.moveSpeed * Math.cos( this.player.rotation.y );
+
+      this.player.position.x = checkMovableAreaX(this.player.position.x, this.moveSpeed * Math.sin(this.player.rotation.y));
+      this.player.position.z = checkMovableAreaZ(this.player.position.z, this.moveSpeed * Math.cos(this.player.rotation.y));
       this.camera.position.x += this.moveSpeed * Math.sin(this.player.rotation.y);
       this.camera.position.z += this.moveSpeed * Math.cos(this.player.rotation.y);
     }
@@ -202,22 +214,38 @@ var PlayerControls = function PlayerControls(camera, player, joystick, domElemen
 
     if (keyState[81]) {
       // 'q' - strafe left
-      playerIsMoving = true;
-      this.player.position.x -= this.moveSpeed * Math.cos(this.player.rotation.y);
-      this.player.position.z += this.moveSpeed * Math.sin(this.player.rotation.y);
+      playerIsMoving = true; //this.player.position.x -= this.moveSpeed * Math.cos( this.player.rotation.y );
+
+      this.player.position.x = checkMovableAreaX(this.player.position.x, -(this.moveSpeed * Math.cos(this.player.rotation.y))); //this.player.position.z += this.moveSpeed * Math.sin( this.player.rotation.y );
+
+      this.player.position.z = checkMovableAreaZ(this.player.position.z, this.moveSpeed * Math.sin(this.player.rotation.y));
       this.camera.position.x -= this.moveSpeed * Math.cos(this.player.rotation.y);
       this.camera.position.z += this.moveSpeed * Math.sin(this.player.rotation.y);
     }
 
     if (keyState[69]) {
       // 'e' - strage right
-      playerIsMoving = true;
-      this.player.position.x += this.moveSpeed * Math.cos(this.player.rotation.y);
-      this.player.position.z -= this.moveSpeed * Math.sin(this.player.rotation.y);
+      playerIsMoving = true; //this.player.position.x += this.moveSpeed * Math.cos( this.player.rotation.y );
+
+      this.player.position.x = checkMovableAreaX(this.player.position.x, this.moveSpeed * Math.cos(this.player.rotation.y)); //this.player.position.z -= this.moveSpeed * Math.sin( this.player.rotation.y );
+
+      this.player.position.z = checkMovableAreaZ(this.player.position.z, -(this.moveSpeed * Math.sin(this.player.rotation.y)));
       this.camera.position.x += this.moveSpeed * Math.cos(this.player.rotation.y);
       this.camera.position.z -= this.moveSpeed * Math.sin(this.player.rotation.y);
     }
   };
+
+  function checkMovableAreaX(x, moveX) {
+    if (movableAreaWidth == -1) return x + moveX;
+    if (x + moveX > movableAreaWidth / 2 || x + moveX < -(movableAreaWidth / 2)) return x;
+    return x + moveX;
+  }
+
+  function checkMovableAreaZ(z, moveZ) {
+    if (movalbeAreaHeight == -1) return z + moveZ;
+    if (z + moveZ > movalbeAreaHeight / 2 || z + moveZ < -(movalbeAreaHeight / 2)) return z;
+    return z + moveZ;
+  }
 
   function getAutoRotationAngle() {
     return 2 * Math.PI / 60 / 60 * scope.autoRotateSpeed;
@@ -799,24 +827,37 @@ function main() {
   var renderer = new three__WEBPACK_IMPORTED_MODULE_0__.WebGLRenderer({
     canvas: canvas
   });
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = three__WEBPACK_IMPORTED_MODULE_0__.PCFSoftShadowMap;
   var fov = 35;
   var aspect = window.innerWidth / window.innerHeight; // the canvas default
 
   var near = 0.1;
   var far = 1000;
   var colorBase = 0x333333;
-  camera = new three__WEBPACK_IMPORTED_MODULE_0__.PerspectiveCamera(fov, aspect, near, far); // camera.position.z = 6.28;
-  // camera.rotation.x =0.64;
-  // camera.position.y = -4.89;
-
+  var movalbeAreaSize = 31;
+  camera = new three__WEBPACK_IMPORTED_MODULE_0__.PerspectiveCamera(fov, aspect, near, far);
   var scene = new three__WEBPACK_IMPORTED_MODULE_0__.Scene();
   {
     scene.background = new three__WEBPACK_IMPORTED_MODULE_0__.Color(colorBase);
     var color = 0xFFFFFF;
-    var intensity = 1;
+    var intensity = 0.9;
     var dirLight = new three__WEBPACK_IMPORTED_MODULE_0__.DirectionalLight(color, intensity);
-    dirLight.position.set(-1, 2, 4);
+    dirLight.position.set(100, 120, 100);
+    dirLight.castShadow = true;
     scene.add(dirLight);
+    var side = 17.0;
+    dirLight.shadow.camera.top = side;
+    dirLight.shadow.camera.bottom = -side;
+    dirLight.shadow.camera.left = side;
+    dirLight.shadow.camera.right = -side;
+    dirLight.shadow.mapSize.set(2048, 2048);
+    dirLight.shadow.camera.near = 0.1; // default
+
+    dirLight.shadow.camera.far = 1000; // default
+    //var shadowHelper = new THREE.CameraHelper( dirLight.shadow.camera );
+    //scene.add( shadowHelper );
+
     var ambLight = new three__WEBPACK_IMPORTED_MODULE_0__.AmbientLight(color, 0.35);
     scene.add(ambLight);
   }
@@ -824,7 +865,11 @@ function main() {
     color: colorBase
   });
   var plane = new three__WEBPACK_IMPORTED_MODULE_0__.Mesh(new three__WEBPACK_IMPORTED_MODULE_0__.PlaneBufferGeometry(100, 100), planeMaterial);
-  plane.rotation.x = -Math.PI / 2; // const cameraFolder = gui.addFolder("camera")  
+  plane.rotation.x = -Math.PI / 2;
+  plane.castShadow = false; //default is false
+
+  plane.receiveShadow = true; //default is false
+  // const cameraFolder = gui.addFolder("camera")  
   // cameraFolder.add(camera.rotation, "x", -Math.PI * 1, Math.PI * 2, 0.01)
   // cameraFolder.add(camera.position, "y", -Math.PI * 2, Math.PI * 1, 0.01)
   // cameraFolder.add(camera.position, "z", -Math.PI * 1, Math.PI * 2, 0.01)
@@ -848,7 +893,7 @@ function main() {
     var wireMaterial = new three__WEBPACK_IMPORTED_MODULE_0__.MeshBasicMaterial({
       color: color,
       wireframe: true,
-      wireframeLinewidth: 10
+      wireframeLinewidth: 15
     });
     var cube = new three__WEBPACK_IMPORTED_MODULE_0__.Mesh(geometry, wireMaterial);
     scene.add(cube);
@@ -862,13 +907,17 @@ function main() {
   var playerSize = 1;
   var playerGeometry = new three__WEBPACK_IMPORTED_MODULE_0__.BoxGeometry(playerSize, playerSize, playerSize);
   var playerMaterial = new three__WEBPACK_IMPORTED_MODULE_0__.MeshPhongMaterial({
-    color: 0x8844aa
+    color: 0xffaaaa
   });
   player = new three__WEBPACK_IMPORTED_MODULE_0__.Mesh(playerGeometry, playerMaterial);
   scene.add(player);
   player.position.x = 0;
   player.position.y += boxHeight / 2;
   player.position.z = 0;
+  player.castShadow = true; //default is false
+
+  player.receiveShadow = false; //default is false
+
   var pixelRatio = window.devicePixelRatio;
   var width = canvas.clientWidth * pixelRatio | 0;
   var height = canvas.clientHeight * pixelRatio | 0; //CONTROL
@@ -881,7 +930,8 @@ function main() {
     baseY: height - 200
   });
   controls = new _PlayerControls_js__WEBPACK_IMPORTED_MODULE_2__.PlayerControls(camera, player, joystick);
-  controls.init(); //CONTROL - Events
+  controls.init();
+  controls.setMovableArea(movalbeAreaSize, movalbeAreaSize); //CONTROL - Events
 
   controls.addEventListener('change', render, false);
   (0,es6_tween__WEBPACK_IMPORTED_MODULE_4__.autoPlay)(true);
@@ -917,19 +967,19 @@ function main() {
           if (object.name == "box1") {
             collisionObj = object.name;
             console.log("COLLISION : BOX1");
-            changePlaneColor(0x44ff88);
+            changePlaneColor(0x22dd66);
           } else if (object.name == "box2") {
             collisionObj = object.name;
             console.log("COLLISION : BOX2");
-            changePlaneColor(0xff8844);
+            changePlaneColor(0xdd6622);
           } else if (object.name == "box3") {
             collisionObj = object.name;
             console.log("COLLISION : BOX3");
-            changePlaneColor(0x4488ff);
+            changePlaneColor(0x2266dd);
           } else if (object.name == "box4") {
             collisionObj = object.name;
             console.log("COLLISION : BOX4");
-            changePlaneColor(0xff88ff);
+            changePlaneColor(0xdd66dd);
           }
         }
       });
